@@ -38,32 +38,30 @@ void process(char *command, int trader_id, int new_socket)
 {
     if(!strcmp(buffer, "Buy") || !strcmp(buffer, "Sell"))
     {
-        struct order t;
-        t.trader_id = trader_id;
+        struct order *t = malloc(sizeof(struct order));
+        t->trader_id = trader_id;
         char *str = "Item Code";
         send(new_socket , str , strlen(str) , 0 );
         memset(buffer, 0, sizeof(buffer));
         read(new_socket, buffer, 1024);
-        sscanf(buffer, "%d", &t.item_code);
-        printf("item code received is %d\n", t.item_code);
+        sscanf(buffer, "%d", &t->item_code);
         str = "Quantity";
         send(new_socket , str , strlen(str), 0 );
         memset(buffer, 0, sizeof(buffer));
         read(new_socket, buffer, 1024);
-        sscanf(buffer, "%d", &t.quantity);
+        sscanf(buffer, "%d", &t->quantity);
         str = "Price";
         send(new_socket , str , strlen(str), 0 );
         memset(buffer, 0, sizeof(buffer));
         read(new_socket, buffer, 1024);
-        sscanf(buffer, "%d", &t.price);
-        printf("price received is %d\n", t.price);
-        t.next = NULL;
-        t.prev = NULL;
-        t.item_code=t.item_code-1;
+        sscanf(buffer, "%d", &t->price);
+        t->next = NULL;
+        t->prev = NULL;
+        t->item_code = t->item_code-1;
         if(!strcmp(buffer, "Buy"))
-            insert_order(1,&t);
+            insert_order(1,t);
         else
-            insert_order(2,&t);
+            insert_order(2,t);
 
         // Run matching routine.
         // execute(type);

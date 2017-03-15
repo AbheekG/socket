@@ -9,9 +9,9 @@
 
 #include "list.h"
 
-static struct order* buy_orders[10] = {NULL};
-static struct order* sell_orders[10] = {NULL};
-static struct trade* trades;
+struct order* buy_orders[10] = {NULL};
+struct order* sell_orders[10] = {NULL};
+struct trade* trades;
 
 /* Type 1 = Buy; Type 2 = Sell. */
 void insert_order(int type, struct order *ord)
@@ -26,32 +26,23 @@ void insert_order(int type, struct order *ord)
   int flag = 0;
   if(o==NULL)
   {
-    // o = ord;
-    buy_orders[ord->item_code] = ord;
-    // head = ord;
-    // flag = 1;
-    ord->next = NULL;
+    head = ord;
     flag = 1;
-    printf("inserted\n");
-    printf("values %d %d\n", ord->item_code, ord->price);    
   }
   else
-  {
       while(o!=NULL && flag!=1)
       {  
         // Buy orders are sorted in decreasing order.
-        if(type==1 && o->price < ord->price || type==2 && o->price > ord->price)
+        if(type==1 && o->price < ord->price || type==2 && o->price>ord->price)
         {
             if(head==o)
             {
-              printf("inserted\n");
                 ord->next = head;
                 head->prev = ord;
                 head = ord;
             }
             else
             {
-              printf("inserted\n");
                 ord->prev = o->prev;
                 ord->next = o;
                 (o->prev)->next = ord;
@@ -62,16 +53,13 @@ void insert_order(int type, struct order *ord)
         else
             o = o->next;
       }
-  }
   if(flag == 0)
     printf("Should not print ever\n");
-
-  printf("values %d %d\n", buy_orders[0]->item_code, buy_orders[0]->price); 
-  // if(type==1)
-  //   buy_orders[ord->item_code] = head;
-  // else
-  //   sell_orders[ord->item_code] = head;
-  // execute(type, ord);
+  if(type==1)
+    buy_orders[ord->item_code] = head;
+  else
+    sell_orders[ord->item_code] = head;
+  execute(type, ord);
 }
 
 void insert_trade(struct trade* tr)
@@ -107,17 +95,16 @@ void order_status(int new_socket)
     for(i=0;i<10;i++)
     {
         if(buy_orders[i]!=NULL) {
-        // sprintf(msg, "%d", i+1);
-        // sprintf(temp, "%d", buy_orders[i]->price);
-        // strcat(msg, " ");
-        // strcat(msg, temp);
-        // sprintf(temp, "%d", buy_orders[i]->quantity);
-        // strcat(msg, " ");
-        // strcat(msg, temp);
-        // send(new_socket, msg, strlen(msg), 0);
-        printf("i is %d \n",i);
-        printf("Item Code %d \t\t Best Price %d \t\t Quantity %d\n", i+1, buy_orders[0]->price,
-            buy_orders[0]->quantity);
+        sprintf(msg, "%d", i+1);
+        sprintf(temp, "%d", buy_orders[i]->price);
+        strcat(msg, " ");
+        strcat(msg, temp);
+        sprintf(temp, "%d", buy_orders[i]->quantity);
+        strcat(msg, " ");
+        strcat(msg, temp);
+        send(new_socket, msg, strlen(msg), 0);
+        printf("Item Code %d \t\t Best Price %d \t\t Quantity %d\n", i+1, buy_orders[i]->price,
+            buy_orders[i]->quantity);
       }
       memset(msg, 0, strlen(msg));
     }
@@ -191,6 +178,7 @@ void execute(int type, struct order *ord)
           tr->quantity = m;
           insert_trade(tr);
         }
+        o=o->next;
       }
     } else {
       o = buy_orders[ord->item_code];
@@ -208,6 +196,7 @@ void execute(int type, struct order *ord)
           tr->quantity = m;
           insert_trade(tr);
         }
+        o=o->next;
       }
     }
 }

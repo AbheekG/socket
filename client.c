@@ -140,12 +140,10 @@ int main(int argc, char const *argv[])
             printf("Request sent\n");
             
             if(!strcmp(hello, "Order_Status"))
-            {
-                printf("executing client code!\n");
                 order_status(sock);
-            }
             else if(!strcmp(hello, "Trade_Status"))
                 trade_status(sock);
+
             memset(buffer, 0, sizeof(buffer));
             valread = read( sock , buffer, 1024);
             if (!valread) {
