@@ -78,10 +78,10 @@ int main(int argc, char const *argv[])
             continue;
 
         while(1) {
-            printf("What to send: ");
+            printf("Request: ");
             scanf("%s", hello);
             send(sock, hello, strlen(hello), 0 );
-            printf("Hello message sent\n");
+            printf("Request sent\n");
             valread = read( sock , buffer, 1024);
             if (!valread) {
                 printf("Connection lost\n");

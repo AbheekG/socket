@@ -1,4 +1,4 @@
-// Server side C/C++ program to demonstrate Socket programming
+// Server side C program to demonstrate Socket programming
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -8,8 +8,11 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-int port;
+#include "list.h"
+
+int port, new_socket;
 char *trader_pass[10] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
+char buffer[1024] = {0};
 
 int login(int new_socket)
 {
@@ -30,13 +33,51 @@ int login(int new_socket)
     send(new_socket, ack, strlen(ack), 0);
     return result;
 }
+
+void process(char *command, int trader_id)
+{
+    if(!strcmp(buffer, "Buy") || !strcmp(buffer, "Sell"))
+    {
+        struct order t;
+        t.trader_id = trader_id;
+        char *str = "Item Code";
+        send(new_socket , str , strlen(str) , 0 );
+        read(new_socket, buffer, 1024);
+        sscanf(buffer, "%d", &t.item_code);
+        str = "Quantity";
+        send(new_socket , str , strlen(str), 0 );
+        read(new_socket, buffer, 1024);
+        sscanf(buffer, "%d", &t.quantity);
+        str = "Price";
+        send(new_socket , str , strlen(str), 0 );
+        read(new_socket, buffer, 1024);
+        sscanf(buffer, "%d", &t.price);
+        t.next = NULL;
+        t.prev = NULL;
+        if(!strcmp(buffer, "Buy"))
+            insert_order(1,&t);
+        else
+            insert_order(2,&t);
+
+        // Run matching routine.
+        execute();
+    }
+    if(!strcmp(buffer, "Order Status"))
+    {
+        order_status();
+    }
+    if(!strcmp(buffer, "Trade Status"))
+    {
+        trade_status(trader_id);
+    }
+}
+
 int main(int argc, char const *argv[])
 {
-    int server_fd, new_socket, valread;
+    int server_fd, valread;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-    char buffer[1024] = {0};
     char *hello = "Hello from server";
     
     // Set port for server
@@ -76,7 +117,7 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-    // Server continues to listen for new connections.
+    /* Server continues to listen for new connections. */
     while(1) {
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
                            (socklen_t*)&addrlen))<0)
@@ -100,6 +141,7 @@ int main(int argc, char const *argv[])
             while(1) {
                 valread = read(new_socket, buffer, 1024);
                 printf("%s\n",buffer );
+                process(buffer, trader_id);
                 send(new_socket , hello , strlen(hello) , 0 );
             }    
             exit(0);
