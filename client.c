@@ -43,27 +43,29 @@ void order_status(int sock)
     char buffer[1024] = {0};
 
     read(sock, buffer, 1024);
-    printf("\n\naaa%s\n\n", buffer);
-    if (strcmp(buffer, "end1"))
+    // printf("\n\naaa%s\n\n", buffer);
+    if (!strcmp(buffer, "end1"))
         printf("\nNo sell orders\n");
     else
         printf("\nSell orders\n===========\n");
 
     
     while(strcmp(buffer, "end1")) {
-        // printf("\nHERE %s\n", buffer);
+        // printf("\nHERE %s\n", buffer);   
         char *sid = strtok(buffer, " ");
         char *price = strtok(NULL, " ");
         char *quantity = strtok(NULL, " ");
         printf("Item Code %s \t\t Best Price %s \t\t Quantity %s\n", sid, price, quantity);
         memset(buffer, 0, 1024);
         read(sock, buffer, 1024);
-        printf("\n\nbbb%s\n\n", buffer);
+        // printf("\n\nbbb%s\n\n", buffer);
     }
     memset(buffer, 0, 1024);
     read(sock, buffer, 1024);
-    printf("\n\nccc%s\n\n", buffer);
-    if (strcmp(buffer, "end2"))
+    
+    // printf("\n\nccc%s\n\n", buffer);
+    
+    if (!strcmp(buffer, "end2"))
         printf("\nNo buy orders\n");
     else
         printf("\nBuy orders\n============\n");
@@ -91,7 +93,7 @@ int trade_status(int sock)
         char *d = strtok(NULL, " ");
         char *e = strtok(NULL, " ");
 
-        printf("%s \nItem Code - %s \t\t Price - %s \t\t Quantity - %s \t\t Counterparty Code - %s\n",
+        printf("%s \nItem Code - %s \t\t Price - %s \t\t Quantity - %s \t\t Counterparty_id - %s\n",
                     a, b, c, d, e);
         memset(buffer, 0, 1024);
         read(sock, buffer, 1024);
@@ -109,7 +111,7 @@ int main(int argc, char const *argv[])
 
     struct sockaddr_in serv_addr;
     char buffer[1024] = {0};
-    char hello[1024];
+    // char hello[1024];
     while(1) {
         if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
         {
@@ -139,7 +141,9 @@ int main(int argc, char const *argv[])
             continue;
 
         while(1) {
+            char hello[1024] = {0};
             printf("Request: ");
+            memset(hello, 0, sizeof(hello));           
             scanf("%s", hello);
             send(sock, hello, strlen(hello), 0);
             printf("Request sent\n");

@@ -9,6 +9,9 @@
 #include <arpa/inet.h>
 
 #include "list.h"
+struct order  **buy_orders;
+struct order **sell_orders;
+struct trade* trades;
 
 int port, new_socket;
 char *trader_pass[10] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
@@ -17,6 +20,7 @@ char buffer[1024] = {0};
 int login(int new_socket)
 {
     char buffer[1024] = {0}, ack[1024] = {0};
+    memset(buffer, 0, 1024);
     read(new_socket, buffer, 1024);
 
     char *username = strtok(buffer, " ");
@@ -38,6 +42,11 @@ void process(char *command, int trader_id, int new_socket)
 {
     if(!strcmp(buffer, "Buy\0") || !strcmp(buffer, "Sell\0"))
     {
+        int id;
+        if (!strcmp(buffer, "Buy\0"))
+            id = 1;
+        else
+            id = 2;
         struct order *t = malloc(sizeof(struct order));
         t->trader_id = trader_id;
         char *str = "Item Code\0";
@@ -58,28 +67,35 @@ void process(char *command, int trader_id, int new_socket)
         t->next = NULL;
         t->prev = NULL;
         t->item_code = t->item_code-1;
-        if(!strcmp(buffer, "Buy\0"))
-            insert_order(1,t);
-        else
-            insert_order(2,t);
+        printf("AD: %s\n\n", buffer);
+        insert_order(id,t, buy_orders, sell_orders, trades);
 
         // Run matching routine.
         // execute(type);
     }
 
     else if(!strcmp(buffer, "Order_Status\0"))
-        order_status(new_socket);
+        order_status(new_socket,buy_orders, sell_orders, trades);
     else if(!strcmp(buffer, "Trade_Status\0"))
-        trade_status(trader_id, new_socket);
+        trade_status(trader_id, new_socket,buy_orders, sell_orders, trades);
     else
         printf("Wrong input: %s\n", buffer);
     char *str = "done\0";
+    sleep(1);
     send(new_socket , str , strlen(str), 0 );
 
 }
 
 int main(int argc, char const *argv[])
 {
+    buy_orders = (struct order**)malloc(sizeof(struct order*)*10);
+    sell_orders = (struct order**)malloc(sizeof(struct order*)*10);
+
+    for (int i = 0; i < 10; i++) {
+        buy_orders[i] = NULL;
+        sell_orders[i] = NULL;
+    }
+
     int server_fd, valread;
     struct sockaddr_in address;
     int opt = 1;
@@ -145,6 +161,7 @@ int main(int argc, char const *argv[])
                     exit(0);
 
             while(1) {
+                 memset(buffer, 0, 1024);
                 valread = read(new_socket, buffer, 1024);
                 printf("%s\n", buffer);
                 process(buffer, trader_id, new_socket);

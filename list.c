@@ -9,12 +9,13 @@
 
 #include "list.h"
 
-struct order* buy_orders[10] = {NULL};
-struct order* sell_orders[10] = {NULL};
-struct trade* trades;
+// extern struct order* buy_orders[10] = {NULL};
+// extern struct order* sell_orders[10] = {NULL};
+// extern struct trade* trades;
 
 /* Type 1 = Buy; Type 2 = Sell. */
-void insert_order(int type, struct order *ord)
+void insert_order(int type, struct order *ord, struct order *buy_orders[10], struct order *sell_orders[10], 
+                  struct trade *trades)
 {
   // Index into the array for the required list.
   struct order *o, *head;
@@ -59,16 +60,18 @@ void insert_order(int type, struct order *ord)
     buy_orders[ord->item_code] = head;
   else
     sell_orders[ord->item_code] = head;
-  execute(type, ord);
+  execute(type, ord, buy_orders, sell_orders, trades);
 }
 
-void insert_trade(struct trade* tr)
+void insert_trade(struct trade* tr, struct order *buy_orders[10], struct order *sell_orders[10], 
+                  struct trade *trades)
 {
     tr->next = trades;
     trades = tr;
 }
 
-void order_status(int new_socket)
+void order_status(int new_socket, struct order *buy_orders[10], struct order *sell_orders[10], 
+                  struct trade *trades)
 {
     int i;
     char msg[1024] = {0}, temp[1024] = {0};
@@ -83,16 +86,16 @@ void order_status(int new_socket)
         sprintf(temp, "%d", sell_orders[i]->quantity);
         strcat(msg, " ");
         strcat(msg, temp);
-        send(new_socket, msg, strlen(msg) + 1, 0);
-
+        sleep(1); send(new_socket, msg, strlen(msg) + 1, 0);
+        printf("mehul %s\n", msg);
         printf("Item Code %d \t\t Best Price %d \t\t Quantity %d\n", i+1, sell_orders[i]->price,
             sell_orders[i]->quantity);
       }
       memset(msg, 0, 1024);
     }
     strcpy(msg, "end1\0");
-    send(new_socket, msg, strlen(msg) + 1, 0);
-
+    sleep(1); send(new_socket, msg, strlen(msg) + 1, 0);
+        printf("mehul %s\n", msg);
     for(i=0;i<10;i++)
     {
         if(buy_orders[i]!=NULL) {
@@ -103,18 +106,20 @@ void order_status(int new_socket)
         sprintf(temp, "%d", buy_orders[i]->quantity);
         strcat(msg, " ");
         strcat(msg, temp);
-        send(new_socket, msg, strlen(msg) + 1, 0);
+        sleep(1); send(new_socket, msg, strlen(msg) + 1, 0);
+        printf("mehul %s\n", msg);
         printf("Item Code %d \t\t Best Price %d \t\t Quantity %d\n", i+1, buy_orders[i]->price,
             buy_orders[i]->quantity);
       }
       memset(msg, 0, 1024);
     }
-
     strcpy(msg, "end2\0");
-    send(new_socket, msg, strlen(msg) + 1, 0);
+    sleep(1); send(new_socket, msg, strlen(msg) + 1, 0);
+        printf("mehul %s\n", msg);
 }
 
-void trade_status(int trader_id, int new_socket)
+void trade_status(int trader_id, int new_socket, struct order *buy_orders[10], struct order *sell_orders[10], 
+                  struct trade *trades)
 {
     struct trade* t = trades;
     char msg[1024] = {0}, temp[1024] = {0};
@@ -125,14 +130,14 @@ void trade_status(int trader_id, int new_socket)
             int counterparty;
             if(t->seller==trader_id)
             {
-                strcpy(msg, "Sell Order");
+                strcpy(msg, "Sell_Order");
                 strcat(msg, " ");
                 // printf("Sell Order\n");
                 // counterparty = t->buyer;
             }
             else
             {
-                strcpy(msg, "Buy Order");
+                strcpy(msg, "Buy_Order");
                 strcat(msg, " ");
                 // printf("Buy Order\n");
                 counterparty = t->seller;
@@ -147,8 +152,9 @@ void trade_status(int trader_id, int new_socket)
             sprintf(temp, "%d", t->quantity);
             strcat(msg, temp);
             strcat(msg, " ");
-            sprintf(temp, "%d", counterparty);
+            sprintf(temp, "%d", counterparty+1);
             strcat(msg, temp);
+            sleep(1); 
             send(new_socket, msg, strlen(msg) + 1, 0);
 
             // printf("Item Code - %d \t\t Price - %d \t\t Quantity - %d \t\t Counterparty Code - %d\n",
@@ -157,11 +163,14 @@ void trade_status(int trader_id, int new_socket)
         t = t->next;
     }
     strcpy(msg, "end\0");
+    sleep(1); 
     send(new_socket, msg, strlen(msg) + 1, 0);
 }
 
-void execute(int type, struct order *ord)
+void execute(int type, struct order *ord, struct order *buy_orders[10], struct order *sell_orders[10], 
+                  struct trade *trades)
 {
+  // return;
   struct order* o;
     if (type == 1) {
       o = sell_orders[ord->item_code];
@@ -177,7 +186,7 @@ void execute(int type, struct order *ord)
           tr->item_code = ord->item_code;
           tr->price = o->price;
           tr->quantity = m;
-          insert_trade(tr);
+          insert_trade(tr, buy_orders, sell_orders, trades);
         }
         o=o->next;
       }
@@ -195,7 +204,7 @@ void execute(int type, struct order *ord)
           tr->item_code = ord->item_code;
           tr->price = ord->price;
           tr->quantity = m;
-          insert_trade(tr);
+          insert_trade(tr, buy_orders, sell_orders, trades);
         }
         o=o->next;
       }
