@@ -72,6 +72,7 @@ void order_status(int new_socket)
 {
     int i;
     char msg[1024] = {0}, temp[1024] = {0};
+    memset(msg, 0, 1024);
     for(i=0;i<10;i++)
     {
       if(sell_orders[i]!=NULL) {
@@ -82,15 +83,15 @@ void order_status(int new_socket)
         sprintf(temp, "%d", sell_orders[i]->quantity);
         strcat(msg, " ");
         strcat(msg, temp);
-        send(new_socket, msg, strlen(msg), 0);
+        send(new_socket, msg, strlen(msg) + 1, 0);
 
         printf("Item Code %d \t\t Best Price %d \t\t Quantity %d\n", i+1, sell_orders[i]->price,
             sell_orders[i]->quantity);
       }
-      memset(msg, 0, strlen(msg));
+      memset(msg, 0, 1024);
     }
-    strcpy(msg, "sell order end");
-    send(new_socket, msg, strlen(msg), 0);
+    strcpy(msg, "end1\0");
+    send(new_socket, msg, strlen(msg) + 1, 0);
 
     for(i=0;i<10;i++)
     {
@@ -102,15 +103,15 @@ void order_status(int new_socket)
         sprintf(temp, "%d", buy_orders[i]->quantity);
         strcat(msg, " ");
         strcat(msg, temp);
-        send(new_socket, msg, strlen(msg), 0);
+        send(new_socket, msg, strlen(msg) + 1, 0);
         printf("Item Code %d \t\t Best Price %d \t\t Quantity %d\n", i+1, buy_orders[i]->price,
             buy_orders[i]->quantity);
       }
-      memset(msg, 0, strlen(msg));
+      memset(msg, 0, 1024);
     }
 
-    strcpy(msg, "buy order end");
-    send(new_socket, msg, strlen(msg), 0);
+    strcpy(msg, "end2\0");
+    send(new_socket, msg, strlen(msg) + 1, 0);
 }
 
 void trade_status(int trader_id, int new_socket)
@@ -148,15 +149,15 @@ void trade_status(int trader_id, int new_socket)
             strcat(msg, " ");
             sprintf(temp, "%d", counterparty);
             strcat(msg, temp);
-            send(new_socket, msg, strlen(msg), 0);
+            send(new_socket, msg, strlen(msg) + 1, 0);
 
             // printf("Item Code - %d \t\t Price - %d \t\t Quantity - %d \t\t Counterparty Code - %d\n",
                 // t->item_code, t->price, t->quantity, counterparty);
         }
         t = t->next;
     }
-    strcpy(msg, "end");
-    send(new_socket, msg, strlen(msg), 0);
+    strcpy(msg, "end\0");
+    send(new_socket, msg, strlen(msg) + 1, 0);
 }
 
 void execute(int type, struct order *ord)

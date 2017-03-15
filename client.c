@@ -43,32 +43,37 @@ void order_status(int sock)
     char buffer[1024] = {0};
 
     read(sock, buffer, 1024);
-
-    if (strcmp(buffer, "sell order end"))
+    printf("\n\naaa%s\n\n", buffer);
+    if (strcmp(buffer, "end1"))
         printf("\nNo sell orders\n");
     else
         printf("\nSell orders\n===========\n");
 
-    while(strcmp(buffer, "sell order end")) {
+    
+    while(strcmp(buffer, "end1")) {
+        // printf("\nHERE %s\n", buffer);
         char *sid = strtok(buffer, " ");
         char *price = strtok(NULL, " ");
         char *quantity = strtok(NULL, " ");
         printf("Item Code %s \t\t Best Price %s \t\t Quantity %s\n", sid, price, quantity);
-        memset(buffer, 0, sizeof(buffer));
+        memset(buffer, 0, 1024);
         read(sock, buffer, 1024);
+        printf("\n\nbbb%s\n\n", buffer);
     }
-
-    if (strcmp(buffer, "buy order end"))
+    memset(buffer, 0, 1024);
+    read(sock, buffer, 1024);
+    printf("\n\nccc%s\n\n", buffer);
+    if (strcmp(buffer, "end2"))
         printf("\nNo buy orders\n");
     else
         printf("\nBuy orders\n============\n");
 
-    while(strcmp(buffer, "buy order end")) {
+    while(strcmp(buffer, "end2")) {
         char *sid = strtok(buffer, " ");
         char *price = strtok(NULL, " ");
         char *quantity = strtok(NULL, " ");
         printf("Item Code %s \t\t Best Price %s \t\t Quantity %s\n", sid, price, quantity);
-        memset(buffer, 0, sizeof(buffer));
+        memset(buffer, 0, 1024);
         read(sock, buffer, 1024);
     }
 
@@ -88,7 +93,7 @@ int trade_status(int sock)
 
         printf("%s \nItem Code - %s \t\t Price - %s \t\t Quantity - %s \t\t Counterparty Code - %s\n",
                     a, b, c, d, e);
-        memset(buffer, 0, sizeof(buffer));
+        memset(buffer, 0, 1024);
         read(sock, buffer, 1024);
     }
 }

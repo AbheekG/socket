@@ -36,29 +36,29 @@ int login(int new_socket)
 
 void process(char *command, int trader_id, int new_socket)
 {
-    if(!strcmp(buffer, "Buy") || !strcmp(buffer, "Sell"))
+    if(!strcmp(buffer, "Buy\0") || !strcmp(buffer, "Sell\0"))
     {
         struct order *t = malloc(sizeof(struct order));
         t->trader_id = trader_id;
-        char *str = "Item Code";
+        char *str = "Item Code\0";
         send(new_socket , str , strlen(str) , 0 );
-        memset(buffer, 0, sizeof(buffer));
+        memset(buffer, 0, 1024);
         read(new_socket, buffer, 1024);
         sscanf(buffer, "%d", &t->item_code);
-        str = "Quantity";
+        str = "Quantity\0";
         send(new_socket , str , strlen(str), 0 );
-        memset(buffer, 0, sizeof(buffer));
+        memset(buffer, 0, 1024);
         read(new_socket, buffer, 1024);
         sscanf(buffer, "%d", &t->quantity);
-        str = "Price";
+        str = "Price\0";
         send(new_socket , str , strlen(str), 0 );
-        memset(buffer, 0, sizeof(buffer));
+        memset(buffer, 0, 1024);
         read(new_socket, buffer, 1024);
         sscanf(buffer, "%d", &t->price);
         t->next = NULL;
         t->prev = NULL;
         t->item_code = t->item_code-1;
-        if(!strcmp(buffer, "Buy"))
+        if(!strcmp(buffer, "Buy\0"))
             insert_order(1,t);
         else
             insert_order(2,t);
@@ -67,13 +67,13 @@ void process(char *command, int trader_id, int new_socket)
         // execute(type);
     }
 
-    else if(!strcmp(buffer, "Order_Status"))
+    else if(!strcmp(buffer, "Order_Status\0"))
         order_status(new_socket);
-    else if(!strcmp(buffer, "Trade_Status"))
+    else if(!strcmp(buffer, "Trade_Status\0"))
         trade_status(trader_id, new_socket);
     else
         printf("Wrong input: %s\n", buffer);
-    char *str = "done";
+    char *str = "done\0";
     send(new_socket , str , strlen(str), 0 );
 
 }
