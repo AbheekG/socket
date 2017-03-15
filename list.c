@@ -122,6 +122,7 @@ void trade_status(int trader_id, int new_socket, struct order *buy_orders[10], s
                   struct trade *trades)
 {
     struct trade* t = trades;
+
     char msg[1024] = {0}, temp[1024] = {0};
     while(t!=NULL)
     {
@@ -177,10 +178,12 @@ void execute(int type, struct order *ord, struct order *buy_orders[10], struct o
       while (o != NULL && ord->quantity > 0) {
         if (o->price <= ord->price && o->quantity > 0) {
           int m = (o->quantity < ord->quantity ? o->quantity : ord->quantity);
-          o->quantity -= m;
-          ord->quantity -= m;
+          printf("Trading sell %d\n", m);
+          o->quantity = o->quantity - m;
+          ord->quantity = ord->quantity - m;
 
-          struct trade* tr;
+          struct trade* tr = (struct trade*)mmap(NULL, sizeof(struct trade), PROT_READ | PROT_WRITE, 
+                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
           tr->buyer = ord->trader_id;
           tr->seller = o->trader_id;
           tr->item_code = ord->item_code;
@@ -195,10 +198,12 @@ void execute(int type, struct order *ord, struct order *buy_orders[10], struct o
       while (o != NULL && ord->quantity > 0) {
         if (o->price >= ord->price && o->quantity > 0) {
           int m = (o->quantity < ord->quantity ? o->quantity : ord->quantity);
-          o->quantity -= m;
-          ord->quantity -= m;
+          o->quantity = o->quantity - m;
+          printf("Trading sell %d\n", m);
+          ord->quantity = ord->quantity - m;
 
-          struct trade* tr;
+          struct trade* tr = (struct trade*)mmap(NULL, sizeof(struct trade), PROT_READ | PROT_WRITE, 
+                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
           tr->buyer = o->trader_id;
           tr->seller = ord->trader_id;
           tr->item_code = ord->item_code;

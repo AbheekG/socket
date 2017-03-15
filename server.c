@@ -7,6 +7,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/mman.h>
+
 
 #include "list.h"
 struct order  **buy_orders;
@@ -47,7 +49,11 @@ void process(char *command, int trader_id, int new_socket)
             id = 1;
         else
             id = 2;
-        struct order *t = malloc(sizeof(struct order));
+        // struct order *t = malloc(sizeof(struct order));
+
+       struct order *t = mmap(NULL, sizeof(struct order), PROT_READ | PROT_WRITE, 
+                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
         t->trader_id = trader_id;
         char *str = "Item Code\0";
         send(new_socket , str , strlen(str) , 0 );
@@ -88,9 +94,17 @@ void process(char *command, int trader_id, int new_socket)
 
 int main(int argc, char const *argv[])
 {
-    buy_orders = (struct order**)malloc(sizeof(struct order*)*10);
-    sell_orders = (struct order**)malloc(sizeof(struct order*)*10);
+    // buy_orders = (struct order**)malloc(sizeof(struct order*)*10);
+    // sell_orders = (struct order**)malloc(sizeof(struct order*)*10);
 
+    buy_orders = (struct order**)mmap(NULL, sizeof(struct order*)*10, PROT_READ | PROT_WRITE, 
+                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    sell_orders = (struct order**)mmap(NULL, sizeof(struct order*)*10, PROT_READ | PROT_WRITE, 
+                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+    // struct order *t = mmap(NULL, sizeof(struct order), PROT_READ | PROT_WRITE, 
+    //                 MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    
     for (int i = 0; i < 10; i++) {
         buy_orders[i] = NULL;
         sell_orders[i] = NULL;
