@@ -34,7 +34,7 @@ int login(int new_socket)
     return result;
 }
 
-void process(char *command, int trader_id)
+void process(char *command, int trader_id, int new_socket)
 {
     if(!strcmp(buffer, "Buy") || !strcmp(buffer, "Sell"))
     {
@@ -42,34 +42,42 @@ void process(char *command, int trader_id)
         t.trader_id = trader_id;
         char *str = "Item Code";
         send(new_socket , str , strlen(str) , 0 );
+        memset(buffer, 0, sizeof(buffer));
         read(new_socket, buffer, 1024);
         sscanf(buffer, "%d", &t.item_code);
+        printf("item code received is %d\n", t.item_code);
         str = "Quantity";
         send(new_socket , str , strlen(str), 0 );
+        memset(buffer, 0, sizeof(buffer));
         read(new_socket, buffer, 1024);
         sscanf(buffer, "%d", &t.quantity);
         str = "Price";
         send(new_socket , str , strlen(str), 0 );
+        memset(buffer, 0, sizeof(buffer));
         read(new_socket, buffer, 1024);
         sscanf(buffer, "%d", &t.price);
+        printf("price received is %d\n", t.price);
         t.next = NULL;
         t.prev = NULL;
+        t.item_code=t.item_code-1;
         if(!strcmp(buffer, "Buy"))
             insert_order(1,&t);
         else
             insert_order(2,&t);
 
         // Run matching routine.
-        execute();
+        // execute(type);
     }
-    if(!strcmp(buffer, "Order Status"))
-    {
-        order_status();
-    }
-    if(!strcmp(buffer, "Trade Status"))
-    {
-        trade_status(trader_id);
-    }
+
+    else if(!strcmp(buffer, "Order_Status"))
+        order_status(new_socket);
+    else if(!strcmp(buffer, "Trade_Status"))
+        trade_status(trader_id, new_socket);
+    else
+        printf("Wrong input: %s\n", buffer);
+    char *str = "done";
+    send(new_socket , str , strlen(str), 0 );
+
 }
 
 int main(int argc, char const *argv[])
@@ -140,9 +148,9 @@ int main(int argc, char const *argv[])
 
             while(1) {
                 valread = read(new_socket, buffer, 1024);
-                printf("%s\n",buffer );
-                process(buffer, trader_id);
-                send(new_socket , hello , strlen(hello) , 0 );
+                printf("%s\n", buffer);
+                process(buffer, trader_id, new_socket);
+                // send(new_socket, hello, strlen(hello), 0);
             }    
             exit(0);
         }

@@ -37,6 +37,62 @@ int login(int sock)
     printf("Login Successfull\n");
     return 1;
 }
+
+void order_status(int sock)
+{
+    char buffer[1024] = {0};
+
+    read(sock, buffer, 1024);
+
+    if (strcmp(buffer, "sell order end"))
+        printf("\nNo sell orders\n");
+    else
+        printf("\nSell orders\n===========\n");
+
+    while(strcmp(buffer, "sell order end")) {
+        char *sid = strtok(buffer, " ");
+        char *price = strtok(NULL, " ");
+        char *quantity = strtok(NULL, " ");
+        printf("Item Code %s \t\t Best Price %s \t\t Quantity %s\n", sid, price, quantity);
+        memset(buffer, 0, sizeof(buffer));
+        read(sock, buffer, 1024);
+    }
+
+    if (strcmp(buffer, "buy order end"))
+        printf("\nNo buy orders\n");
+    else
+        printf("\nBuy orders\n============\n");
+
+    while(strcmp(buffer, "buy order end")) {
+        char *sid = strtok(buffer, " ");
+        char *price = strtok(NULL, " ");
+        char *quantity = strtok(NULL, " ");
+        printf("Item Code %s \t\t Best Price %s \t\t Quantity %s\n", sid, price, quantity);
+        memset(buffer, 0, sizeof(buffer));
+        read(sock, buffer, 1024);
+    }
+
+}
+
+int trade_status(int sock)
+{
+    char buffer[1024] = {0};
+
+    read(sock, buffer, 1024);
+    while(strcmp(buffer, "end")) {
+        char *a = strtok(buffer, " ");
+        char *b = strtok(NULL, " ");
+        char *c = strtok(NULL, " ");
+        char *d = strtok(NULL, " ");
+        char *e = strtok(NULL, " ");
+
+        printf("%s \nItem Code - %s \t\t Price - %s \t\t Quantity - %s \t\t Counterparty Code - %s\n",
+                    a, b, c, d, e);
+        memset(buffer, 0, sizeof(buffer));
+        read(sock, buffer, 1024);
+    }
+}
+
 int main(int argc, char const *argv[])
 {
     struct sockaddr_in address;
@@ -80,15 +136,26 @@ int main(int argc, char const *argv[])
         while(1) {
             printf("Request: ");
             scanf("%s", hello);
-            send(sock, hello, strlen(hello), 0 );
+            send(sock, hello, strlen(hello), 0);
             printf("Request sent\n");
+            
+            if(!strcmp(hello, "Order_Status"))
+            {
+                printf("executing client code!\n");
+                order_status(sock);
+            }
+            else if(!strcmp(hello, "Trade_Status"))
+                trade_status(sock);
+            memset(buffer, 0, sizeof(buffer));
             valread = read( sock , buffer, 1024);
             if (!valread) {
                 printf("Connection lost\n");
                 break;
             }
-            printf("%d %s\n",valread, buffer);
+            if(strcmp(buffer, "done"))
+                printf("%s\n", buffer);
         }
     }
     return 0;
 }
+

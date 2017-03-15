@@ -22,12 +22,12 @@ struct trade{
   int price;
   int quantity;
   struct trade* next;
-  struct trade* prev;
+  // struct trade* prev;
 };
 
 /* Type 1 = Buy; Type 2 = Sell. */
 void insert_order(int, struct order*);
 void insert_trade(struct trade*);
-void order_status();
-void trade_status(int);
-void execute();
+void order_status(int);
+void trade_status(int, int);
+void execute(int, struct order*);
