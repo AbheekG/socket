@@ -9,13 +9,12 @@
 
 #include "list.h"
 
-// extern struct order* buy_orders[10] = {NULL};
-// extern struct order* sell_orders[10] = {NULL};
-// extern struct trade* trades;
+struct order* buy_orders[10] = {NULL};
+struct order* sell_orders[10] = {NULL};
+struct trade* trades;
 
 /* Type 1 = Buy; Type 2 = Sell. */
-void insert_order(int type, struct order *ord, struct order *buy_orders[10], struct order *sell_orders[10], 
-                  struct trade *trades)
+void insert_order(int type, struct order *ord)
 {
   // Index into the array for the required list.
   struct order *o, *head;
@@ -60,18 +59,16 @@ void insert_order(int type, struct order *ord, struct order *buy_orders[10], str
     buy_orders[ord->item_code] = head;
   else
     sell_orders[ord->item_code] = head;
-  execute(type, ord, buy_orders, sell_orders, trades);
+  execute(type, ord);
 }
 
-void insert_trade(struct trade* tr, struct order *buy_orders[10], struct order *sell_orders[10], 
-                  struct trade *trades)
+void insert_trade(struct trade* tr)
 {
     tr->next = trades;
     trades = tr;
 }
 
-void order_status(int new_socket, struct order *buy_orders[10], struct order *sell_orders[10], 
-                  struct trade *trades)
+void order_status(int new_socket)
 {
     int i;
     char msg[1024] = {0}, temp[1024] = {0};
@@ -118,8 +115,7 @@ void order_status(int new_socket, struct order *buy_orders[10], struct order *se
         printf("mehul %s\n", msg);
 }
 
-void trade_status(int trader_id, int new_socket, struct order *buy_orders[10], struct order *sell_orders[10], 
-                  struct trade *trades)
+void trade_status(int trader_id, int new_socket)
 {
     struct trade* t = trades;
 
@@ -168,8 +164,7 @@ void trade_status(int trader_id, int new_socket, struct order *buy_orders[10], s
     send(new_socket, msg, strlen(msg) + 1, 0);
 }
 
-void execute(int type, struct order *ord, struct order *buy_orders[10], struct order *sell_orders[10], 
-                  struct trade *trades)
+void execute(int type, struct order *ord)
 {
   // return;
   struct order* o;
@@ -182,14 +177,13 @@ void execute(int type, struct order *ord, struct order *buy_orders[10], struct o
           o->quantity = o->quantity - m;
           ord->quantity = ord->quantity - m;
 
-          struct trade* tr = (struct trade*)mmap(NULL, sizeof(struct trade), PROT_READ | PROT_WRITE, 
-                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+          struct trade* tr = (struct trade*)malloc(sizeof(struct trade));
           tr->buyer = ord->trader_id;
           tr->seller = o->trader_id;
           tr->item_code = ord->item_code;
           tr->price = o->price;
           tr->quantity = m;
-          insert_trade(tr, buy_orders, sell_orders, trades);
+          insert_trade(tr);
         }
         o=o->next;
       }
@@ -202,14 +196,13 @@ void execute(int type, struct order *ord, struct order *buy_orders[10], struct o
           printf("Trading sell %d\n", m);
           ord->quantity = ord->quantity - m;
 
-          struct trade* tr = (struct trade*)mmap(NULL, sizeof(struct trade), PROT_READ | PROT_WRITE, 
-                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+          struct trade* tr = (struct trade*)malloc(sizeof(struct trade));
           tr->buyer = o->trader_id;
           tr->seller = ord->trader_id;
           tr->item_code = ord->item_code;
           tr->price = ord->price;
           tr->quantity = m;
-          insert_trade(tr, buy_orders, sell_orders, trades);
+          insert_trade(tr);
         }
         o=o->next;
       }

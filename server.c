@@ -7,17 +7,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <sys/mman.h>
-
+#include <pthread.h>
 
 #include "list.h"
-struct order  **buy_orders;
-struct order **sell_orders;
-struct trade* trades;
 
 int port, new_socket;
 char *trader_pass[10] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
-char buffer[1024] = {0};
 
 int login(int new_socket)
 {
@@ -40,8 +35,12 @@ int login(int new_socket)
     return result;
 }
 
-void process(char *command, int trader_id, int new_socket)
-{
+void process(int new_socket, int trader_id) {
+    char buffer[1024] = {0};
+    memset(buffer, 0, 1024);
+    int valread = read(new_socket, buffer, 1024);
+    printf("%s\n", buffer);
+
     if(!strcmp(buffer, "Buy\0") || !strcmp(buffer, "Sell\0"))
     {
         int id;
@@ -49,10 +48,10 @@ void process(char *command, int trader_id, int new_socket)
             id = 1;
         else
             id = 2;
-        // struct order *t = malloc(sizeof(struct order));
+        struct order *t = malloc(sizeof(struct order));
 
-       struct order *t = mmap(NULL, sizeof(struct order), PROT_READ | PROT_WRITE, 
-                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+       // struct order *t = mmap(NULL, sizeof(struct order), PROT_READ | PROT_WRITE, 
+       //              MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
         t->trader_id = trader_id;
         char *str = "Item Code\0";
@@ -74,43 +73,37 @@ void process(char *command, int trader_id, int new_socket)
         t->prev = NULL;
         t->item_code = t->item_code-1;
         printf("AD: %s\n\n", buffer);
-        insert_order(id,t, buy_orders, sell_orders, trades);
+        insert_order(id, t);
 
-        // Run matching routine.
-        // execute(type);
     }
 
     else if(!strcmp(buffer, "Order_Status\0"))
-        order_status(new_socket,buy_orders, sell_orders, trades);
+        order_status(new_socket);
     else if(!strcmp(buffer, "Trade_Status\0"))
-        trade_status(trader_id, new_socket,buy_orders, sell_orders, trades);
+        trade_status(trader_id, new_socket);
     else
         printf("Wrong input: %s\n", buffer);
+
     char *str = "done\0";
     sleep(1);
     send(new_socket , str , strlen(str), 0 );
+}
 
+void* start_conn(void *temp)
+{
+    int new_socket = *((int*)temp);
+    int trader_id = login(new_socket);
+
+    if(trader_id == 0)      //Exit the process if login fails
+        return NULL;
+
+    while(1)
+        process(new_socket, trader_id);
 }
 
 int main(int argc, char const *argv[])
 {
-    // buy_orders = (struct order**)malloc(sizeof(struct order*)*10);
-    // sell_orders = (struct order**)malloc(sizeof(struct order*)*10);
-
-    buy_orders = (struct order**)mmap(NULL, sizeof(struct order*)*10, PROT_READ | PROT_WRITE, 
-                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    sell_orders = (struct order**)mmap(NULL, sizeof(struct order*)*10, PROT_READ | PROT_WRITE, 
-                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-
-    // struct order *t = mmap(NULL, sizeof(struct order), PROT_READ | PROT_WRITE, 
-    //                 MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    
-    for (int i = 0; i < 10; i++) {
-        buy_orders[i] = NULL;
-        sell_orders[i] = NULL;
-    }
-
-    int server_fd, valread;
+    int server_fd;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
@@ -154,6 +147,8 @@ int main(int argc, char const *argv[])
     }
 
     /* Server continues to listen for new connections. */
+    pthread_t threads[5];
+    int t = 0;
     while(1) {
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
                            (socklen_t*)&addrlen))<0)
@@ -161,30 +156,22 @@ int main(int argc, char const *argv[])
             perror("accept");
             exit(EXIT_FAILURE);
         }
-
-        /*Create child process. It handles a single client.*/
-        int pid = fork();
-        if (pid == 0) {
-            /* Child process will stop listening for new connection
-             * but will maintain the connection with this client.
-             */
-            close(server_fd);
-
-            int trader_id = login(new_socket);
-            if(trader_id == 0)      //Exit the process if login fails
-                    exit(0);
-
-            while(1) {
-                 memset(buffer, 0, 1024);
-                valread = read(new_socket, buffer, 1024);
-                printf("%s\n", buffer);
-                process(buffer, trader_id, new_socket);
-                // send(new_socket, hello, strlen(hello), 0);
-            }    
-            exit(0);
+        /*Create child thread. It handles a single client.*/
+        int rc = pthread_create(&threads[t], NULL, start_conn, (void *)&new_socket);
+        if (rc){
+            printf("ERROR; return code from pthread_create() is %d\n", rc);
+            exit(-1);
         }
-        else
-            close(new_socket); //Parent closes the connection with client.
+        t = t + 1;        
     }
+    while(t > 0) {
+        if(pthread_join(threads[t-1], NULL)) {
+            fprintf(stderr, "Error joining thread\n");
+            return 2;
+        }
+        t--;
+        printf("Joined thread %d\n", t);
+    }
+
     return 0;
 }

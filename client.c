@@ -93,7 +93,7 @@ int trade_status(int sock)
         char *d = strtok(NULL, " ");
         char *e = strtok(NULL, " ");
 
-        printf("%s \nItem Code - %s \t\t Price - %s \t\t Quantity - %s \t\t Counterparty_id - %s\n",
+        printf("%s \nItem Code %s \t\t Price %s \t\t Quantity %s \t\t Counterparty_id %s\n",
                     a, b, c, d, e);
         memset(buffer, 0, 1024);
         read(sock, buffer, 1024);
