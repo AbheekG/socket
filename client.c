@@ -45,7 +45,7 @@ void order_status(int sock)
     read(sock, buffer, 1024);
     // printf("\n\naaa%s\n\n", buffer);
     if (!strcmp(buffer, "end1"))
-        printf("\nNo sell orders\n");
+        printf("\nNo Sell Orders\n");
     else
         printf("\nSell orders\n===========\n");
 
@@ -55,7 +55,7 @@ void order_status(int sock)
         char *sid = strtok(buffer, " ");
         char *price = strtok(NULL, " ");
         char *quantity = strtok(NULL, " ");
-        printf("Item Code %s \t\t Best Price %s \t\t Quantity %s\n", sid, price, quantity);
+        printf("Item Code %d \t | Best Price %s \t | Quantity %s |\n", atoi(sid)+1, price, quantity);
         memset(buffer, 0, 1024);
         read(sock, buffer, 1024);
         // printf("\n\nbbb%s\n\n", buffer);
@@ -66,7 +66,7 @@ void order_status(int sock)
     // printf("\n\nccc%s\n\n", buffer);
     
     if (!strcmp(buffer, "end2"))
-        printf("\nNo buy orders\n");
+        printf("\nNo Buy Orders\n");
     else
         printf("\nBuy orders\n============\n");
 
@@ -74,7 +74,7 @@ void order_status(int sock)
         char *sid = strtok(buffer, " ");
         char *price = strtok(NULL, " ");
         char *quantity = strtok(NULL, " ");
-        printf("Item Code %s \t\t Best Price %s \t\t Quantity %s\n", sid, price, quantity);
+        printf("Item Code %d \t | Best Price %s \t | Quantity %s |\n", atoi(sid)+1, price, quantity);
         memset(buffer, 0, 1024);
         read(sock, buffer, 1024);
     }
@@ -88,13 +88,15 @@ int trade_status(int sock)
     read(sock, buffer, 1024);
     while(strcmp(buffer, "end")) {
         char *a = strtok(buffer, " ");
+        char *f = strtok(NULL, " ");
         char *b = strtok(NULL, " ");
         char *c = strtok(NULL, " ");
         char *d = strtok(NULL, " ");
         char *e = strtok(NULL, " ");
 
-        printf("%s \nItem Code %s \t\t Price %s \t\t Quantity %s \t\t Counterparty_id %s\n",
-                    a, b, c, d, e);
+        printf("\n%s %s\n----------\n", a, f);
+        printf("Item Code %d \t | Price %s \t | Quantity %s \t | Counterparty_id %s |\n",
+                    atoi(b)+1, c, d, e);
         memset(buffer, 0, 1024);
         read(sock, buffer, 1024);
     }

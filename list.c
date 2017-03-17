@@ -127,14 +127,14 @@ void trade_status(int trader_id, int new_socket)
             int counterparty;
             if(t->seller==trader_id)
             {
-                strcpy(msg, "Sell_Order");
+                strcpy(msg, "Sell Order");
                 strcat(msg, " ");
                 // printf("Sell Order\n");
                 // counterparty = t->buyer;
             }
             else
             {
-                strcpy(msg, "Buy_Order");
+                strcpy(msg, "Buy Order");
                 strcat(msg, " ");
                 // printf("Buy Order\n");
                 counterparty = t->seller;
