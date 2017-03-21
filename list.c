@@ -130,7 +130,7 @@ void trade_status(int trader_id, int new_socket)
                 strcpy(msg, "Sell Order");
                 strcat(msg, " ");
                 // printf("Sell Order\n");
-                // counterparty = t->buyer;
+                counterparty = t->buyer;
             }
             else
             {
@@ -149,7 +149,7 @@ void trade_status(int trader_id, int new_socket)
             sprintf(temp, "%d", t->quantity);
             strcat(msg, temp);
             strcat(msg, " ");
-            sprintf(temp, "%d", counterparty+1);
+            sprintf(temp, "%d", counterparty);
             strcat(msg, temp);
             sleep(1); 
             send(new_socket, msg, strlen(msg) + 1, 0);
@@ -166,7 +166,6 @@ void trade_status(int trader_id, int new_socket)
 
 void execute(int type, struct order *ord)
 {
-  // return;
   struct order* o;
     if (type == 1) {
       o = sell_orders[ord->item_code];
@@ -207,4 +206,41 @@ void execute(int type, struct order *ord)
         o=o->next;
       }
     }
+
+  // after execution if there are any orders with 0 quantity, remove them.
+  struct order *o1, *o2, *it1, *it2;
+  it1 = buy_orders[ord->item_code];
+  it2 = sell_orders[ord->item_code];
+  //for buy orders.
+  while(it1!=NULL)
+  {
+    if(it1->quantity!=0)
+      break;
+    else if(it1->quantity==0)
+    {
+      o1 = it1;
+      if(it1!=NULL)
+        it1 = it1->next;
+      else
+        it1=NULL;
+      buy_orders[ord->item_code] = it1;
+      free(o1);
+    }
+  }
+  // for sell orders.
+  while(it2!=NULL)
+  {
+    if(it2->quantity!=0)
+      break;
+    else if(it2->quantity==0)
+    {
+      o2 = it2;
+      if(it2!=NULL)
+        it2 = it2->next;
+      else
+        it2=NULL;
+      sell_orders[ord->item_code] = it2;
+      free(o2);
+    }
+  }
 }

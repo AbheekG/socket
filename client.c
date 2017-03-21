@@ -55,7 +55,7 @@ void order_status(int sock)
         char *sid = strtok(buffer, " ");
         char *price = strtok(NULL, " ");
         char *quantity = strtok(NULL, " ");
-        printf("Item Code %d \t | Best Price %s \t | Quantity %s |\n", atoi(sid)+1, price, quantity);
+        printf("Item Code %d \t | Best Price %s \t | Quantity %s |\n", atoi(sid), price, quantity);
         memset(buffer, 0, 1024);
         read(sock, buffer, 1024);
         // printf("\n\nbbb%s\n\n", buffer);
@@ -74,7 +74,7 @@ void order_status(int sock)
         char *sid = strtok(buffer, " ");
         char *price = strtok(NULL, " ");
         char *quantity = strtok(NULL, " ");
-        printf("Item Code %d \t | Best Price %s \t | Quantity %s |\n", atoi(sid)+1, price, quantity);
+        printf("Item Code %d \t | Best Price %s \t | Quantity %s |\n", atoi(sid), price, quantity);
         memset(buffer, 0, 1024);
         read(sock, buffer, 1024);
     }
