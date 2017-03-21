@@ -149,7 +149,9 @@ int main(int argc, char const *argv[])
             scanf("%s", hello);
             send(sock, hello, strlen(hello), 0);
             printf("Request sent\n");
-            
+            if (!strcmp(hello, "Exit"))
+                return 0;
+
             if(!strcmp(hello, "Order_Status"))
                 order_status(sock);
             else if(!strcmp(hello, "Trade_Status"))
