@@ -35,7 +35,7 @@ int login(int new_socket)
     return result;
 }
 
-void process(int new_socket, int trader_id) {
+int process(int new_socket, int trader_id) {
     char buffer[1024] = {0};
     memset(buffer, 0, 1024);
     int valread = read(new_socket, buffer, 1024);
@@ -55,10 +55,13 @@ void process(int new_socket, int trader_id) {
 
         t->trader_id = trader_id;
         char *str = "Item Code\0";
-        send(new_socket , str , strlen(str) , 0 );
-        memset(buffer, 0, 1024);
-        read(new_socket, buffer, 1024);
-        sscanf(buffer, "%d", &t->item_code);
+        do {
+            send(new_socket , str , strlen(str) , 0 );
+            memset(buffer, 0, 1024);
+            read(new_socket, buffer, 1024);
+            sscanf(buffer, "%d", &t->item_code);
+            str = "Item Code should be from 1 to 10.\0";
+        } while(t->item_code < 1 || t->item_code > 10);
         str = "Quantity\0";
         send(new_socket , str , strlen(str), 0 );
         memset(buffer, 0, 1024);
@@ -81,12 +84,18 @@ void process(int new_socket, int trader_id) {
         order_status(new_socket);
     else if(!strcmp(buffer, "Trade_Status\0"))
         trade_status(trader_id, new_socket);
-    else
+    else if(!strcmp(buffer, "Exit")) {
+        printf("Closing connection with trader %d\n", trader_id);
+        close(new_socket);
+        return 0;
+    }
+    else 
         printf("Wrong input: %s\n", buffer);
 
     char *str = "done\0";
     sleep(1);
     send(new_socket , str , strlen(str), 0 );
+    return 1;
 }
 
 void* start_conn(void *temp)
@@ -97,8 +106,9 @@ void* start_conn(void *temp)
     if(trader_id == 0)      //Exit the process if login fails
         return NULL;
 
-    while(1)
-        process(new_socket, trader_id);
+    int flag = 1;
+    while(flag)
+        flag = process(new_socket, trader_id);
 }
 
 int main(int argc, char const *argv[])

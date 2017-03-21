@@ -84,7 +84,7 @@ void order_status(int new_socket)
         strcat(msg, " ");
         strcat(msg, temp);
         sleep(1); send(new_socket, msg, strlen(msg) + 1, 0);
-        printf("mehul %s\n", msg);
+        // printf("mehul %s\n", msg);
         printf("Item Code %d \t\t Best Price %d \t\t Quantity %d\n", i+1, sell_orders[i]->price,
             sell_orders[i]->quantity);
       }
@@ -92,7 +92,7 @@ void order_status(int new_socket)
     }
     strcpy(msg, "end1\0");
     sleep(1); send(new_socket, msg, strlen(msg) + 1, 0);
-        printf("mehul %s\n", msg);
+        // printf("mehul %s\n", msg);
     for(i=0;i<10;i++)
     {
         if(buy_orders[i]!=NULL) {
@@ -104,7 +104,7 @@ void order_status(int new_socket)
         strcat(msg, " ");
         strcat(msg, temp);
         sleep(1); send(new_socket, msg, strlen(msg) + 1, 0);
-        printf("mehul %s\n", msg);
+        // printf("mehul %s\n", msg);
         printf("Item Code %d \t\t Best Price %d \t\t Quantity %d\n", i+1, buy_orders[i]->price,
             buy_orders[i]->quantity);
       }
@@ -112,7 +112,7 @@ void order_status(int new_socket)
     }
     strcpy(msg, "end2\0");
     sleep(1); send(new_socket, msg, strlen(msg) + 1, 0);
-        printf("mehul %s\n", msg);
+        // printf("mehul %s\n", msg);
 }
 
 void trade_status(int trader_id, int new_socket)
